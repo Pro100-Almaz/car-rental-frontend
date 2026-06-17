@@ -1,234 +1,101 @@
-# TailAdmin Vue - Free Vue.js Tailwind CSS Admin Dashboard Template
+# AutoFleet CRM — Frontend
 
-TailAdmin Vue is a free, open-source admin dashboard template **built on Vue.js**, popular and progressive JavaScript
-framework, and **Tailwind CSS**. This **powerful combination** provides developers with an extensive library of
-essential components, elements, and pages to launch a comprehensive and data-centric back-end, dashboard, or admin panel
-solution for any Vue.js based web projects.
+Management dashboard for a car rental business operating in Kazakhstan. Built with Vue 3, Vite, and Tailwind CSS 4 on the TailAdmin Pro template.
 
-![TailAdmin Vue.js Dashboard Preview](./banner.png)
+## Tech Stack
 
-With TailAdmin Vue, you can leverage **Vue.js 3** features such as declarative rendering, component-based architecture,
-Vue Router for routing, and Pinia for state management. It also utilizes the power of Tailwind CSS for rapid UI
-development with its low-level utility classes and responsive design capabilities.
+- **Vue 3.5** — Composition API with `<script setup>`, TypeScript strict
+- **Vite 6** — dev server & build
+- **Tailwind CSS 4** — utility-first styling with design tokens
+- **Pinia 3** — state management (auth store with `organizationId`)
+- **Vue Router 4** — SPA routing with lazy-loaded views
+- **ApexCharts** — dashboard charts via `vue3-apexcharts`
+- **Axios** — API client with interceptors
+- **lucide-vue-next** — icon library
 
-## Overview
+## Modules
 
-TailAdmin provides essential UI components and layouts for building feature-rich, data-driven admin dashboards and control panels. It's built on:
+| Module | Path | Description |
+|---|---|---|
+| Dashboard | `/` | KPIs, weekly revenue chart, fleet status |
+| Fleet | `/fleet` | Vehicle list, detail, create/edit with filters |
+| Rentals | `/rentals` | Rental agreements, create/detail |
+| Clients | `/clients` | Client directory and profiles |
+| Investors | `/investors` | Investor profiles, vehicle binding, P&L, payouts |
+| Investor Portal | `/portal` | Read-only investor view (dashboard, vehicles, payouts) |
+| Fines | `/fines` | Traffic fine tracking |
+| Maintenance | `/maintenance` | Vehicle maintenance records |
+| Finance | `/finance` | Cash journal, expense categories |
+| Settings | `/settings` | User management, organization settings |
 
-- Vue 3.x (Vite)
-- Tailwind CSS 4.x
-- TypeScript
-
-### Quick Links
-
-- [✨ Visit Website](https://tailadmin.com)
-- [📄 Documentation](https://tailadmin.com/docs)
-- [⬇️ Download](https://tailadmin.com/download)
-- [🖌️ Figma Design File (Community Edition)](https://www.figma.com/community/file/1463141366275764364)
-- [⚡ Get PRO Version](https://tailadmin.com/pricing)
-
-### Demos
-
-- [Free Version](https://free-vue-demo.tailadmin.com/)
-- [Pro Version](https://vue-demo.tailadmin.com)
-
-### Other Versions
-
-- [HTML Version](https://github.com/TailAdmin/tailadmin-free-tailwind-dashboard-template)
-- [Next.js Version](https://github.com/TailAdmin/free-nextjs-admin-dashboard)
-- [React Version](https://github.com/TailAdmin/free-react-tailwind-admin-dashboard)
-- [Angular Version](https://github.com/TailAdmin/free-angular-tailwind-dashboard)
-
-## Installation
+## Getting Started
 
 ### Prerequisites
 
-To get started with TailAdmin, ensure you have the following prerequisites installed and set up:
+- Node.js 18+ (20+ recommended)
+- Backend API running on `localhost:8000` (or configured via ngrok)
 
-- Node.js 18.x or later (recommended to use Node.js 20.x or later)
-- Recommended IDE Setup: [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-#### Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-### Cloning the Repository
-
-Clone the repository using the following command:
+### Install & Run
 
 ```bash
-git clone https://github.com/TailAdmin/vue-tailwind-admin-dashboard.git
+npm install
+npm run dev
 ```
 
-> Windows Users: place the repository near the root of your drive if you face issues while cloning.
+The dev server proxies `/api` requests to `localhost:8000`.
 
-1. Install dependencies:
+### Build
 
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
+```bash
+npm run build-only
+```
 
-2. Start the development server:
+Output goes to `dist/`.
 
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   ```
+### Type Check
 
-3. Production build:
-   ```bash
-   npm run build
-   # or
-   yarn build
-   ```
+```bash
+npm run build
+```
 
-## Feature Comparison
+Runs `vue-tsc` type checking alongside the build.
 
-### Free Version
+## Environment Variables
 
-- 1 Unique Dashboard
-- 50+ Dashboard UI components
-- Basic Figma design files
-- Community support
+| Variable | Default | Description |
+|---|---|---|
+| `VITE_API_URL` | `/api/v1` | Backend API base URL |
 
-### Pro Version
+- `.env.development` — uses Vite proxy (`/api/v1`)
+- `.env.production` — points to the deployed backend URL
 
-- 7 Unique Dashboards: Analytics, Ecommerce, Marketing, CRM, Stocks (more coming soon)
-- 500+ dashboard components and UI elements
-- Complete Figma design file
-- Email support
+## Deploy to Vercel
 
-To learn more about pro version features and pricing, visit our [pricing page](https://tailadmin.com/pricing).
+```bash
+npx vercel
+```
 
-## Components
+`vercel.json` is pre-configured with SPA rewrites and `build-only` as the build command. Set `VITE_API_URL` in Vercel environment variables if the backend URL changes.
 
-TailAdmin is a pre-designed starting point for building a web-based dashboard using Vue.js and Tailwind CSS. The template includes:
+## Project Structure
 
-- Sophisticated and accessible sidebar
-- Data visualization components
-- Prebuilt profile management and 404 page
-- Tables and Charts(Line and Bar)
-- Authentication forms and input elements
-- Alerts, Dropdowns, Modals, Buttons and more
-- Can't forget Dark Mode 🕶️
+```
+src/
+├── api/            # Axios client with auth interceptors
+├── assets/         # Global CSS, fonts
+├── components/     # Shared UI components, layout (sidebar, header)
+├── composables/    # Reusable logic (useVehicles, useInvestors, etc.)
+├── router/         # Route definitions
+├── stores/         # Pinia stores (auth)
+├── types/          # TypeScript interfaces
+├── utils/          # Formatters (currency, dates)
+└── views/          # Page components organized by module
+```
 
-All components are built with Vue and styled using Tailwind CSS for easy customization.
+## Conventions
 
-## Features
-
-**💎 High-quality, Premium Modern Design:**
-A thoughtfully designed dashboard template with a deep focus on UX/UI, already trusted and utilized by over 10K+ web apps worldwide.
-
-**✨ Vue 3:**
-Get enhanced performance with the latest Vue version.
-
-**⚡ Vite Build System:**
-Enjoy quick development with Vite, ensuring fast code compilation.
-
-**🔀 Vue Router:**
-Manage app navigation with ease using Vue Router for seamless transitions.
-
-**💡 Reactive Utilities:**
-Enhance component reactivity with @vueuse/core utilities.
-
-**📊 Charting with ApexCharts:**
-Visualize data with ApexCharts for beautiful analytics.
-
-**🗺️ Vector Maps with JSVectorMap:**
-Easily integrate interactive vector maps with JSVectorMap.
-
-**🖌️ UI with Tailwind CSS:**
-Frontend UI built on the powerful and versatile Tailwind CSS framework.
-
-**💫 TypeScript Support:**
-Write safer, maintainable code with TailAdmin Vue's TypeScript Support.
-
-**✅ Linting and Formatting:**
-Maintain a clean codebase with built-in linting and formatting.
-
-**🗃️ State Management with Pinia:**
-Handle your app's state with Pinia for clean, organized code.
-
-## Update Logs
-
-### Version 2.3.0 - [April 28, 2026]
-- Added **AI Dashboard** with token usage and revenue tracking.
-- Added **Sales Dashboard** with retention and multi-channel analytics.
-- Added **Finance Dashboard** with cashflow and balance management.
-- Introduced **6 New Layout variations** for improved UI flexibility.
-- Integrated **Advanced Data Visualization** with 7+ new chart types.
-
-### Version 2.0.2 - [December 30, 2025]
-
-#### Enhancements
-
-- Added date range picker to Statistics Chart component.
-- Improved responsive design for chart header.
-
-### Version 2.0.1 - [February 27, 2025]
-
-#### Update Overview
-
-- Upgraded to Tailwind CSS v4 for better performance and efficiency.
-- Updated class usage to match the latest syntax and features.
-- Replaced deprecated class and optimized styles.
-
-#### Next Steps
-
-- Run npm install or yarn install to update dependencies.
-- Check for any style changes or compatibility issues.
-- Refer to the Tailwind CSS v4 [Migration Guide](https://tailwindcss.com/docs/upgrade-guide) on this release. if needed.
-- This update keeps the project up to date with the latest Tailwind improvements. 🚀
-
-### Version 2.0.0 - [February 2025]
-
-Major update with Vue 3 migration and comprehensive redesign.
-
-#### Major Improvements
-
-- Complete migration to Vue 3 Composition API
-- Updated to Vue Router 4
-- Enhanced user interface with new Vue 3 components
-- Improved performance with Vue 3's virtual DOM
-- Better accessibility and responsive design
-
-#### New Features
-
-- Redesigned dashboards (Ecommerce, Analytics, Marketing, CRM)
-- Collapsible sidebar with Vue 3 integration
-- Enhanced navigation with Vue Router 4
-- Real-time chat functionality
-- Full-featured calendar with drag-and-drop
-- Advanced table components
-- Updated data visualization with ApexCharts
-
-#### Breaking Changes
-
-- Requires Vue 3 and Vue Router 4
-- Chart components migrated to ApexCharts for Vue 3
-- Modified routing implementation
-- Updated component APIs for Vue 3 compatibility
-
-[Read more](https://tailadmin.com/docs/update-logs/vue) on this release.
-
-### Version 1.0.2 - [June 19, 2024]
-
-#### Issues
-
-- Fix Mobile Menu Hamburger Icon issue.
-
-### Version 1.0.1 - [Feb 08, 2024]
-
-#### Enhancements
-
-- Make it functional [Multiselect Dropdown/Form Elements].
-- Delete SelectGroup Components then create a SelectGroup folder and create two files under this
-  folder SelectGroupOne.vue SelectGroupTwo.vue [Select Group/Form Elements & Layout].
-- Update style.css file.
-
-### Version 1.0.0 - Initial Release - [Jan 22, 2024]
-
-- Initial release of TailAdmin Vue.
+- **Language**: Russian UI, KZT currency (`formatKZT` utility)
+- **Icons**: `lucide-vue-next` exclusively
+- **Font**: Plus Jakarta Sans
+- **Design tokens**: `brand-500`, `error-500`, `warning-500`, `success-500`
+- **API pattern**: composables return reactive refs + async functions, API calls include `organization_id` from auth store
