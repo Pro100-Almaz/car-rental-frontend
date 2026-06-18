@@ -445,15 +445,17 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   if (!auth.isAuthenticated) {
-    const hasSession = await auth.checkSession()
+    const hasSession = await auth.initialize()
     if (!hasSession) {
       return next({ name: 'Signin' })
     }
   }
 
+  console.log('oooooooooooooooooooo')
   const allowedRoles = ROUTE_ALLOWED_ROLES[to.name as string]
   if (allowedRoles && auth.userRole && !allowedRoles.includes(auth.userRole)) {
     const home = DEFAULT_HOME[auth.userRole] || '/'
+    console.log('llsksjksjsksjskjsksj')
     return next(home)
   }
 

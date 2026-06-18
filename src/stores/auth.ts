@@ -11,10 +11,16 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!user.value)
   const organizationId = computed(() => user.value?.organization_id || '')
+
+  const initialized = ref(false)
+
   const fullName = computed(() =>
     user.value ? `${user.value.first_name} ${user.value.last_name}` : '',
   )
   const userRole = computed(() => user.value?.role)
+
+  console.log('sssssssssss' + user.value)
+
 
   function hasRole(...roles: UserRole[]): boolean {
     return !!user.value && roles.includes(user.value.role)
@@ -24,8 +30,15 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     error.value = null
     try {
-      await api.post('/account/login/', { email, password })
+      const res = await api.post('/account/login/', {
+        email,
+        password
+      })
+
+      localStorage.setItem('access_token', res.data.access_token)
+
       _loginEmail.value = email
+
       await fetchProfile()
     } catch (err: any) {
       error.value = err.response?.data?.detail || 'Ошибка входа'
@@ -37,8 +50,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout() {
     try {
-      await api.delete('/account/logout/')
+      await api.post('/account/logout/')
     } finally {
+      localStorage.removeItem('access_token')
       user.value = null
       _loginEmail.value = null
     }
@@ -46,7 +60,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function fetchProfile() {
     try {
-      const { data } = await api.get('/users/', { params: { limit: 100 } })
+      console.log('Fetching profile...')
+      const { data } = await api.get('/users/', { params: { limit: 100 }})
       const users: UserProfile[] = data.users || data.items || []
 
       if (_loginEmail.value) {
@@ -54,12 +69,49 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         user.value = users[0] || null
       }
+      console.log('Profile fetched:', user.value)
     } catch {
       user.value = null
+      console.log('Failed to fetch profile. User is not authenticated.')
     }
   }
 
+  async function initialize(){
+    if (initialized.value) {
+      return !!user.value
+    }
+
+    const token = localStorage.getItem('access_token')
+
+    if (!token) {
+      user.value = null
+      initialized.value = true
+      return false
+    }
+
+    loading.value = true
+    error.value = null
+
+    try{
+      const {data} = await api.get('/account/me/')
+      user.value = data
+      return true
+    }catch(err){
+      localStorage.removeItem('access_token')
+      user.value = null
+      return false
+    }finally{
+      loading.value = false
+      initialized.value = true
+    }
+  }
+
+
   async function checkSession(): Promise<boolean> {
+    if (!initialized.value) {
+      return await initialize()
+    }
+
     try {
       await fetchProfile()
       return !!user.value
@@ -74,6 +126,7 @@ export const useAuthStore = defineStore('auth', () => {
     error,
     isAuthenticated,
     organizationId,
+    initialize,
     fullName,
     userRole,
     hasRole,

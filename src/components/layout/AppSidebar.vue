@@ -281,27 +281,27 @@ const menuGroups: MenuGroup[] = [
       },
     ],
   },
-  {
-    title: 'Коммуникации',
-    items: [
-      {
-        icon: MessageSquare,
-        name: 'Сообщения',
-        roles: ['super_admin', 'admin', 'booking_manager'],
-        subItems: [
-          { name: 'Входящие', path: '/communications/inbox' },
-          { name: 'Звонки', path: '/communications/calls' },
-          { name: 'Командный чат', path: '/communications/team-chat' },
-        ],
-      },
-      {
-        icon: ClipboardList,
-        name: 'Задачи',
-        path: '/tasks',
-        roles: ['super_admin', 'admin', 'booking_manager'],
-      },
-    ],
-  },
+  // {
+  //   title: 'Коммуникации',
+  //   items: [
+  //     {
+  //       icon: MessageSquare,
+  //       name: 'Сообщения',
+  //       roles: ['super_admin', 'admin', 'booking_manager'],
+  //       subItems: [
+  //         { name: 'Входящие', path: '/communications/inbox' },
+  //         { name: 'Звонки', path: '/communications/calls' },
+  //         { name: 'Командный чат', path: '/communications/team-chat' },
+  //       ],
+  //     },
+  //     {
+  //       icon: ClipboardList,
+  //       name: 'Задачи',
+  //       path: '/tasks',
+  //       roles: ['super_admin', 'admin', 'booking_manager'],
+  //     },
+  //   ],
+  // },
   {
     title: 'Учёт',
     items: [
@@ -331,44 +331,44 @@ const menuGroups: MenuGroup[] = [
       },
     ],
   },
-  {
-    title: 'Финансы',
-    items: [
-      {
-        icon: Wallet,
-        name: 'Финансы',
-        roles: ['super_admin', 'admin', 'booking_manager', 'financial_manager'],
-        subItems: [
-          { name: 'Касса', path: '/finance/cash-journal' },
-          { name: 'ОПиУ', path: '/finance/pnl', roles: ['super_admin', 'admin', 'financial_manager'] },
-          { name: 'Cash Flow', path: '/finance/cash-flow', roles: ['super_admin', 'admin', 'financial_manager'] },
-          { name: 'Задолженности', path: '/finance/debts', roles: ['super_admin', 'admin', 'financial_manager'] },
-          { name: 'Залоги', path: '/finance/deposits', roles: ['super_admin', 'admin', 'financial_manager'] },
-        ],
-      },
-      {
-        icon: Target,
-        name: 'KPI и Бонусы',
-        roles: ['super_admin', 'admin'],
-        subItems: [
-          { name: 'Дашборд KPI', path: '/kpi' },
-          { name: 'Бонусы', path: '/kpi/bonuses' },
-        ],
-      },
-      {
-        icon: BarChart3,
-        name: 'Аналитика',
-        roles: ['super_admin', 'admin', 'financial_manager'],
-        subItems: [
-          { name: 'Доходы и загрузка', path: '/analytics/revenue' },
-          { name: 'Расходы', path: '/analytics/expenses' },
-          { name: 'Маркетинг', path: '/analytics/marketing', roles: ['super_admin', 'admin'] },
-          { name: 'Прибыльность', path: '/analytics/profitability' },
-          { name: 'Сводная таблица', path: '/analytics/summary' },
-        ],
-      },
-    ],
-  },
+  // {
+  //   title: 'Финансы',
+  //   items: [
+  //     {
+  //       icon: Wallet,
+  //       name: 'Финансы',
+  //       roles: ['super_admin', 'admin', 'booking_manager', 'financial_manager'],
+  //       subItems: [
+  //         { name: 'Касса', path: '/finance/cash-journal' },
+  //         { name: 'ОПиУ', path: '/finance/pnl', roles: ['super_admin', 'admin', 'financial_manager'] },
+  //         { name: 'Cash Flow', path: '/finance/cash-flow', roles: ['super_admin', 'admin', 'financial_manager'] },
+  //         { name: 'Задолженности', path: '/finance/debts', roles: ['super_admin', 'admin', 'financial_manager'] },
+  //         { name: 'Залоги', path: '/finance/deposits', roles: ['super_admin', 'admin', 'financial_manager'] },
+  //       ],
+  //     },
+  //     {
+  //       icon: Target,
+  //       name: 'KPI и Бонусы',
+  //       roles: ['super_admin', 'admin'],
+  //       subItems: [
+  //         { name: 'Дашборд KPI', path: '/kpi' },
+  //         { name: 'Бонусы', path: '/kpi/bonuses' },
+  //       ],
+  //     },
+  //     {
+  //       icon: BarChart3,
+  //       name: 'Аналитика',
+  //       roles: ['super_admin', 'admin', 'financial_manager'],
+  //       subItems: [
+  //         { name: 'Доходы и загрузка', path: '/analytics/revenue' },
+  //         { name: 'Расходы', path: '/analytics/expenses' },
+  //         { name: 'Маркетинг', path: '/analytics/marketing', roles: ['super_admin', 'admin'] },
+  //         { name: 'Прибыльность', path: '/analytics/profitability' },
+  //         { name: 'Сводная таблица', path: '/analytics/summary' },
+  //       ],
+  //     },
+  //   ],
+  // },
   {
     title: 'Система',
     items: [

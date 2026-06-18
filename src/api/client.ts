@@ -7,10 +7,25 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
 })
 
+
+api.interceptors.request.use(
+  (config) => {
+    const access_token = localStorage.getItem('access_token')
+    if (access_token) {
+      config.headers['Authorization'] = `Bearer ${access_token}`
+    }
+    return config
+  },
+  (error) => Promise.reject(error),
+)
+
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      localStorage.removeItem('access_token')
+
       const currentPath = window.location.pathname
       if (currentPath !== '/signin') {
         router.push('/signin')
