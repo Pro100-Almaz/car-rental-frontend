@@ -19,9 +19,6 @@ export const useAuthStore = defineStore('auth', () => {
   )
   const userRole = computed(() => user.value?.role)
 
-  console.log('sssssssssss' + user.value)
-
-
   function hasRole(...roles: UserRole[]): boolean {
     return !!user.value && roles.includes(user.value.role)
   }
@@ -60,7 +57,6 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function fetchProfile() {
     try {
-      console.log('Fetching profile...')
       const { data } = await api.get('/users/', { params: { limit: 100 }})
       const users: UserProfile[] = data.users || data.items || []
 
@@ -69,10 +65,8 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         user.value = users[0] || null
       }
-      console.log('Profile fetched:', user.value)
     } catch {
       user.value = null
-      console.log('Failed to fetch profile. User is not authenticated.')
     }
   }
 
@@ -93,7 +87,7 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
 
     try{
-      const {data} = await api.get('/account/me/')
+      const {data} = await api.get('/users/current/')
       user.value = data
       return true
     }catch(err){
