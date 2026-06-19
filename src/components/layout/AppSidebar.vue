@@ -101,14 +101,14 @@
                   :class="[
                     'menu-item group',
                     {
-                      'menu-item-active': isActive(item.path),
-                      'menu-item-inactive': !isActive(item.path),
+                      'menu-item-active': isParentActive(item.path),
+                      'menu-item-inactive': !isParentActive(item.path),
                     },
                   ]"
                 >
                   <span
                     :class="[
-                      isActive(item.path)
+                      isExactActive(item.path)
                         ? 'menu-item-icon-active'
                         : 'menu-item-icon-inactive',
                     ]"
@@ -140,10 +140,10 @@
                           :class="[
                             'menu-dropdown-item',
                             {
-                              'menu-dropdown-item-active': isActive(
+                              'menu-dropdown-item-active': isExactActive(
                                 subItem.path
                               ),
-                              'menu-dropdown-item-inactive': !isActive(
+                              'menu-dropdown-item-inactive': !isExactActive(
                                 subItem.path
                               ),
                             },
@@ -412,12 +412,17 @@ const filteredMenuGroups = computed(() => {
     .filter(group => group.items.length > 0)
 })
 
-const isActive = (path: string) =>
-  path === '/' ? route.path === '/' : route.path === path || route.path.startsWith(path + '/')
-
 const toggleSubmenu = (groupIndex: number, itemIndex: number) => {
   const key = `${groupIndex}-${itemIndex}`
   openSubmenu.value = openSubmenu.value === key ? null : key
+}
+
+const isExactActive = (path: string) => {
+  return route.path === path
+}
+
+const isParentActive = (path: string) => {
+  return path === '/' ? route.path ==='/' : route.path === path || route.path.startsWith(path + '/')
 }
 
 const isAnySubmenuRouteActive = computed(() => {
@@ -425,7 +430,7 @@ const isAnySubmenuRouteActive = computed(() => {
     group.items.some(
       (item) =>
         'subItems' in item &&
-        item.subItems?.some((subItem) => isActive(subItem.path)),
+        item.subItems?.some((subItem) => isExactActive(subItem.path)),
     ),
   )
 })
@@ -438,7 +443,7 @@ const isSubmenuOpen = (groupIndex: number, itemIndex: number) => {
     openSubmenu.value === key ||
     (isAnySubmenuRouteActive.value &&
       'subItems' in item &&
-      item.subItems?.some((subItem) => isActive(subItem.path)))
+      item.subItems?.some((subItem) => isExactActive(subItem.path)))
   )
 }
 
