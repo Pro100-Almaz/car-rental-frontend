@@ -154,7 +154,6 @@ async function handleSubmit() {
     await authStore.login(email.value, password.value)
     router.push('/')
   } catch {
-    console.error('Login failed')
     // error is already set in auth store
   }
 }
