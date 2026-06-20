@@ -451,11 +451,9 @@ router.beforeEach(async (to, _from, next) => {
     }
   }
 
-  console.log('oooooooooooooooooooo')
   const allowedRoles = ROUTE_ALLOWED_ROLES[to.name as string]
   if (allowedRoles && auth.userRole && !allowedRoles.includes(auth.userRole)) {
     const home = DEFAULT_HOME[auth.userRole] || '/'
-    console.log('llsksjksjsksjskjsksj')
     return next(home)
   }
 
