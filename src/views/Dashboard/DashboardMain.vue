@@ -211,8 +211,10 @@
           </div>
           <div @wheel.prevent="() => {}">
             <apexchart
+              class="w-full"
               type="area"
               height="280"
+              width="95%"
               :options="chartOptions"
               :series="chartSeries"
             />

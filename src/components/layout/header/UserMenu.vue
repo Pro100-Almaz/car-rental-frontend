@@ -10,9 +10,8 @@
       >
         {{ userInitials }}
       </div>
-      <div class="hidden text-left lg:block">
-        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ userName }}</p>
-        <p class="text-xs text-gray-400 dark:text-gray-500">{{ userEmail }}</p>
+      <div class="overflow-hidden hidden text-left lg:block">
+        <p class="text-sm font-medium text-gray-700 dark:text-gray-300 overflow-hidden">{{ userName }}</p>
       </div>
       <ChevronDown
         class="hidden h-4 w-4 text-gray-400 transition-transform duration-200 lg:block"
@@ -35,8 +34,7 @@
       >
         <!-- User info -->
         <div class="border-b border-gray-100 px-3 py-2.5 dark:border-gray-800">
-          <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ userName }}</p>
-          <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{{ userEmail }}</p>
+          <p class="text-sm font-medium text-gray-800 dark:text-white/90 overflow-hidden">{{ userName }}</p>
         </div>
 
         <!-- Menu items -->
