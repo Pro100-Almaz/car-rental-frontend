@@ -453,13 +453,15 @@ const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
 
-const { vehicles, loading: loadingVehicles, fetchAll: fetchVehicles } = useVehicles()
+const { vehicles, loading: loadingVehicles, fetchAll: fetchVehicles, listRentalPrice} = useVehicles()
 const { clients, loading: loadingClients, fetchAll: fetchClients } = useClients()
 const { create } = useRentals()
 const toast = useToast()
 
 const submitting = ref(false)
 const submitError = ref('')
+const fetchedDailyRate = ref(0)
+const pricingLoading = ref(false)
 
 // ─── Form state ────────────────────────────────────────────────────────────
 interface FormState {
@@ -517,9 +519,33 @@ const bookingTypeToRateType: Record<string, FormState['rate_type']> = {
   monthly: 'per_month',
 }
 
+function calculateRateByBookingType(
+  dailyRate: number,
+  bookingType: FormState['booking_type'],
+): number {
+  if (bookingType === 'hourly') return Math.round(dailyRate / 24)
+  if (bookingType === 'daily') return dailyRate
+  if (bookingType === 'weekly') return dailyRate * 7
+  if (bookingType === 'monthly') return dailyRate * 30
+  return dailyRate
+}
+
+function applyFetchedRate() {
+  if (fetchedDailyRate.value <= 0) {
+    form.value.base_rate = 0
+    return
+  }
+
+  form.value.base_rate = calculateRateByBookingType(
+    fetchedDailyRate.value,
+    form.value.booking_type,
+  )
+}
+
 function onBookingTypeChange(value: FormState['booking_type']) {
   form.value.booking_type = value
   form.value.rate_type = bookingTypeToRateType[value]
+  applyFetchedRate()
 }
 
 // ─── Computed helpers ───────────────────────────────────────────────────────
@@ -619,6 +645,70 @@ function toISO(local: string): string {
   // datetime-local gives "YYYY-MM-DDTHH:mm" — append seconds + KZ offset
   return `${local}:00+06:00`
 }
+
+interface VehiclePricing {
+  id: string
+  vehicle_id: string
+  base_daily_rate: string
+  name: string
+  multiplier: string
+  valid_from: string
+  valid_to: string
+  is_active: boolean
+  created_at: string
+}
+
+interface ListVehiclePricingResponse {
+  items: VehiclePricin
+}
+
+async function fetchVehiclePricing(vehicleId: string) {
+  if (!vehicleId) {
+    fetchedDailyRate.value = 0
+    form.value.base_rate = 0
+    return
+  }
+
+  pricingLoading.value = true
+
+  try {
+    const data = await listRentalPrice(vehicleId, true) as ListVehiclePricingResponse
+
+    const prices = data.items ?? []
+
+    if (prices.length === 0) {
+      fetchedDailyRate.value = 0
+      form.value.base_rate = 0
+      toast.error('Для этого автомобиля цена не найдена')
+      return
+    }
+
+    const mostRecentPrice = [...prices].sort((a, b) => {
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })[0]
+
+    const baseDailyRate = Number(mostRecentPrice.base_daily_rate)
+    const multiplier = Number(mostRecentPrice.multiplier)
+
+    fetchedDailyRate.value = baseDailyRate * multiplier
+
+    applyFetchedRate()
+  } catch {
+    fetchedDailyRate.value = 0
+    form.value.base_rate = 0
+    toast.error('Не удалось загрузить цену автомобиля')
+  } finally {
+    pricingLoading.value = false
+  }
+}
+
+watch(
+  () => form.value.vehicle_id,
+  async (vehicleId) => {
+    await fetchVehiclePricing(vehicleId)
+  },
+)
+
 
 // ─── Query param pre-fill ───────────────────────────────────────────────────
 onMounted(async () => {

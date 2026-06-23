@@ -332,6 +332,45 @@
           </div>
         </div>
 
+
+        <div class="mt-5 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+          <div class="mb-4 flex items-center gap-2">
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-500/10">
+              <CreditCard class="h-4 w-4 text-brand-500" />
+            </div>
+              <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Стоимость аренды</h2>
+
+              <button
+                @click="openEditPriceModal"
+                class="ml-auto inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:text-gray-300 dark:hover:bg-white/[0.03]"
+              >
+                <Pencil class="h-4 w-4" />
+                Редактировать
+              </button>
+          </div>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+              <p class="mb-1 text-xs text-gray-500 dark:text-gray-400">Цена дневного тарифа</p>
+              <p class="text-sm font-semibold text-gray-800 dark:text-white/90">
+                {{ fetchedDailyRate ? formatKZT(parseFloat(String(fetchedDailyRate))) : '—' }}
+              </p>
+            </div>
+            <div class="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+              <p class="mb-1 text-xs text-gray-500 dark:text-gray-400">Действителен с</p>
+              <p :class="['text-sm font-semibold', expiryClass(vehicle.insurance_expiry)]">
+                {{ valid_from ? formatDate(valid_from) : '—' }}
+              </p>
+            </div>
+            <div class="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+              <p class="mb-1 text-xs text-gray-500 dark:text-gray-400">Действителен до</p>
+              <p :class="['text-sm font-semibold', expiryClass(vehicle.inspection_expiry)]">
+                {{ valid_to ? formatDate(valid_to) : '—' }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+
         <div class="mt-5 rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
           <div class="flex items-center gap-2 border-b border-gray-100 p-5 dark:border-gray-800">
             <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-500/10">
@@ -1000,6 +1039,89 @@
 
     <transition name="modal">
       <div
+        v-if="showEditPriceModal"
+        class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/40 backdrop-blur-sm dark:bg-black/60"
+        @click.self="showEditPriceModal = false"
+      >
+        <transition name="modal-panel">
+          <div class="w-full max-w-2xl rounded-2xl bg-white shadow-theme-xl dark:bg-gray-900">
+            <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-gray-800">
+              <div class="flex items-center gap-3">
+                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 dark:bg-brand-500/10">
+                  <Pencil class="h-4 w-4 text-brand-500" />
+                </div>
+                <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">Редактировать данные аренды</h3>
+              </div>
+              <button
+                @click="showEditPriceModal = false"
+                class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"
+              >
+                <X class="h-4 w-4" />
+              </button>
+            </div>
+
+            <div class="max-h-[68vh] overflow-y-auto px-6 py-5 space-y-6">
+
+              <!-- Покупка и документы -->
+              <div>
+                <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Детали арендной платы</p>
+                <div>
+                  <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Цена дневного тарифа, ₸</label>
+                    <input
+                      v-model="editPriceForm.base_daily_rate"
+                      type="number"
+                      :placeholder="String(fetchedDailyRate)"
+                      min="0"
+                      class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700 outline-none transition-colors focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:focus:border-brand-500"
+                    />
+                  </div>
+                  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Действителен с</label>
+                    <input
+                      v-model="editPriceForm.valid_from"
+                      type="date"
+                      class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700 outline-none transition-colors focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:focus:border-brand-500"
+                    />
+                  </div>
+                  <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Действителен до</label>
+                    <input
+                      v-model="editPriceForm.valid_to"
+                      type="date"
+                      class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700 outline-none transition-colors focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:focus:border-brand-500"
+                    />
+                  </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4 dark:border-gray-800">
+              <button
+                @click="showEditPriceModal = false"
+                class="rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700"
+              >
+                Отмена
+              </button>
+              <button
+                @click="handleSavePriceEdit"
+                :disabled="actionLoading"
+                class="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 active:bg-brand-700 disabled:opacity-60"
+              >
+                <Loader2 v-if="actionLoading" class="h-4 w-4 animate-spin" />
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </transition>
+      </div>
+    </transition>
+
+    <transition name="modal">
+      <div
         v-if="showDocModal"
         class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/40 backdrop-blur-sm dark:bg-black/60"
         @click.self="showDocModal = false"
@@ -1111,6 +1233,7 @@ const {
   vehicle, loading, financials, timeline, documents,
   fetchOne, fetchFinancials, fetchTimeline, fetchDocuments,
   changeStatus, update, createDocument, deleteDocument,
+  listRentalPrice, updateRentalPrice
 } = useVehicles()
 
 const { rentals, loading: rentalsLoading, fetchAll: fetchRentals } = useRentals()
@@ -1139,6 +1262,7 @@ const showStatusModal = ref(false)
 const pendingStatus = ref<VehicleStatus | null>(null)
 const showDocModal = ref(false)
 const showEditModal = ref(false)
+const showEditPriceModal = ref(false)
 
 interface EditForm {
   nickname: string
@@ -1160,6 +1284,21 @@ interface EditForm {
   branch_id: string
   investor_id: string
 }
+
+interface EditPriceForm {
+  base_daily_rate: string
+  valid_from: string
+  valid_to: string
+}
+
+const editPriceForm = reactive<EditPriceForm>({
+  base_daily_rate: '',
+  valid_from: '',
+  valid_to: ''
+})
+
+let editPriceFormSnapshot: EditPriceForm = { ...editPriceForm}
+
 
 const editForm = reactive<EditForm>({
   nickname: '',
@@ -1207,6 +1346,62 @@ function openEditModal() {
   editForm.investor_id = ''
   editFormSnapshot = { ...editForm }
   showEditModal.value = true
+}
+
+function openEditPriceModal() {
+  const price = currentVehiclePricing.value
+
+  if (!price) {
+    toast.error('Цена для редактирования не найдена')
+    return
+  }
+
+  editPriceForm.base_daily_rate = String(Number(price.base_daily_rate))
+  editPriceForm.valid_from = price.valid_from
+  editPriceForm.valid_to = price.valid_to
+
+  editPriceFormSnapshot = { ...editPriceForm }
+  showEditPriceModal.value = true
+}
+
+
+async function handleSavePriceEdit() {
+  const price = currentVehiclePricing.value
+
+  if (!price) {
+    toast.error('Цена для редактирования не найдена')
+    return
+  }
+
+  actionLoading.value = true
+
+  try {
+    const payload: Record<string, unknown> = {}
+
+    if (editPriceForm.base_daily_rate !== editPriceFormSnapshot.base_daily_rate) {
+      payload.base_daily_rate = String(editPriceForm.base_daily_rate)
+    }
+
+    if (editPriceForm.valid_from !== editPriceFormSnapshot.valid_from) {
+      payload.valid_from = editPriceForm.valid_from
+    }
+
+    if (editPriceForm.valid_to !== editPriceFormSnapshot.valid_to) {
+      payload.valid_to = editPriceForm.valid_to
+    }
+
+    if (Object.keys(payload).length > 0) {
+      await updateRentalPrice(price.id, payload)
+      await fetchVehiclePricing(id)
+    }
+
+    showEditPriceModal.value = false
+    toast.success('Цена аренды обновлена')
+  } catch {
+    toast.error('Ошибка при обновлении цены аренды')
+  } finally {
+    actionLoading.value = false
+  }
 }
 
 async function handleSaveEdit() {
@@ -1377,20 +1572,88 @@ async function loadDocs() {
     docsLoading.value = false
   }
 }
+const fetchedDailyRate = ref(0)
+const valid_from = ref('')
+const valid_to = ref('')
+const currentVehiclePricing = ref<VehiclePricing | null>(null)
+
+interface VehiclePricing {
+  id: string
+  vehicle_id: string
+  base_daily_rate: string
+  name: string
+  multiplier: string
+  valid_from: string
+  valid_to: string
+  is_active: boolean
+  created_at: string
+}
+
+interface ListVehiclePricingResponse {
+  items: VehiclePricing[]
+}
+
+async function fetchVehiclePricing(vehicleId: string) {
+  if (!vehicleId) {
+    fetchedDailyRate.value = 0
+    valid_from.value = ''
+    valid_to.value = ''
+    currentVehiclePricing.value = null
+    return
+  }
+
+  try {
+    const data = await listRentalPrice(vehicleId, true) as ListVehiclePricingResponse
+    const prices = data.items ?? []
+
+    if (prices.length === 0) {
+      fetchedDailyRate.value = 0
+      valid_from.value = '--'
+      valid_to.value = '--'
+      currentVehiclePricing.value = null
+      toast.error('Для этого автомобиля цена не найдена')
+      return
+    }
+
+    const mostRecentPrice = [...prices].sort((a, b) => {
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })[0]
+
+    currentVehiclePricing.value = mostRecentPrice
+
+    const baseDailyRate = Number(mostRecentPrice.base_daily_rate)
+    const multiplier = Number(mostRecentPrice.multiplier)
+
+    fetchedDailyRate.value = baseDailyRate * multiplier
+    valid_from.value = mostRecentPrice.valid_from
+    valid_to.value = mostRecentPrice.valid_to
+  } catch {
+    fetchedDailyRate.value = 0
+    valid_from.value = '--'
+    valid_to.value = '--'
+    currentVehiclePricing.value = null
+    toast.error('Не удалось загрузить цену автомобиля')
+  }
+}
 
 onMounted(async () => {
   await fetchOne(id)
   await Promise.all([
-    fetchRentals({ vehicle_id: id }),
-    fetchClients(),
-    fetchInvestors(),
-    loadFinancials(),
-    (async () => {
-      timelineLoading.value = true
-      try { await fetchTimeline(id) } finally { timelineLoading.value = false }
-    })(),
-    loadDocs(),
-  ])
+  fetchVehiclePricing(id),
+  fetchRentals({ vehicle_id: id }),
+  fetchClients(),
+  fetchInvestors(),
+  loadFinancials(),
+  (async () => {
+    timelineLoading.value = true
+    try {
+      await fetchTimeline(id)
+    } finally {
+      timelineLoading.value = false
+    }
+  })(),
+  loadDocs(),
+])
 })
 
 function timelineIcon(type: TimelineEvent['event_type']) {
