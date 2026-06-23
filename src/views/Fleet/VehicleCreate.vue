@@ -291,6 +291,52 @@
             </div>
           </div>
 
+          <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+            <h2 class="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-800 dark:text-white/90">
+              <Banknote class="h-5 w-5 text-brand-500" />
+              Цена за аренду
+            </h2>
+            <div>
+              <div>
+                <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Цена дневного тарифа (₸)
+                </label>
+                <input
+                  v-model.number="pricing_form.base_daily_rate"
+                  type="number"
+                  min="0"
+                  step="10000"
+                  placeholder="0"
+                  class="w-full rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700 tabular-nums outline-none transition-colors placeholder:text-gray-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                />
+              </div>
+
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Действителен с:
+                  </label>
+                  <input
+                    v-model="pricing_form.valid_from"
+                    type="date"
+                    class="w-full rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700 outline-none transition-colors focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                  />
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Действителен до:
+                  </label>
+                  <input
+                    v-model="pricing_form.valid_to"
+                    type="date"
+                    class="w-full rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700 outline-none transition-colors focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                  />
+                </div>
+              </div>
+
+            </div>
+          </div>
+
           <div
             v-if="submitError"
             class="rounded-xl border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700 dark:border-error-500/20 dark:bg-error-500/10 dark:text-error-400"
@@ -394,6 +440,7 @@ import {
   Plus,
   Loader2,
   Users,
+  Banknote
 } from 'lucide-vue-next'
 import { useVehicles } from '@/composables/useVehicles'
 import { useVehicleCategories } from '@/composables/useVehicleCategories'
@@ -402,7 +449,7 @@ import { useToast } from '@/composables/useToast'
 import { formatKZT } from '@/utils/currency'
 
 const router = useRouter()
-const { create } = useVehicles()
+const { create, createRentalPrice } = useVehicles()
 const { activeCategories, loading: categoriesLoading, fetchCategories } = useVehicleCategories()
 const { investors, fetchAll: fetchInvestors, bindVehicle } = useInvestors()
 const toast = useToast()
@@ -452,6 +499,21 @@ const form = ref<FormState>({
   inspection_expiry: '',
   investor_id: '',
 })
+
+interface PriceForm {
+  vehicle_id: string
+  base_daily_rate: number
+  valid_from: string
+  valid_to: string
+}
+
+const pricing_form = ref<PriceForm>({
+  vehicle_id:'',
+  base_daily_rate:0,
+  valid_from:'',
+  valid_to:'',
+})
+
 
 const transmissionOptions = [
   { value: 'manual', label: 'Механика' },
@@ -550,6 +612,18 @@ async function handleSubmit() {
       await bindVehicle(form.value.investor_id, data.id)
     }
     toast.success('Автомобиль добавлен')
+
+    const pricing_payload: Record<string, unknown> = {
+      vehicle_id: data.id,
+      base_daily_rate:String(pricing_form.value.base_daily_rate),
+      valid_from: pricing_form.value.valid_from.trim(),
+      valid_to : pricing_form.value.valid_to.trim(),
+      name: 'Default',
+      multiplier: '1.00',
+    }
+
+    const pricing_data = await createRentalPrice(pricing_payload)
+
     router.push(`/fleet/${data.id}`)
   } catch (err: unknown) {
     const e = err as { response?: { data?: { detail?: string; message?: string } } }

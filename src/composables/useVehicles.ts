@@ -99,10 +99,35 @@ export function useVehicles() {
     await api.delete(`/vehicle-documents/${documentId}`)
   }
 
+  async function createRentalPrice(payload: Record<string, unknown>){
+    const {data} = await api.post(`/vehicle-pricing/`, payload)
+    return data
+  }
+
+  async function updateRentalPrice(vehicle_pricing_id: string, payload: Record<string, unknown>){
+    const {data} = await api.patch(`/vehicle-pricing/${vehicle_pricing_id}`, payload)
+    return data
+  }
+
+  async function listRentalPrice(vehicleId: string, isActive?: boolean) {
+    const params: Record<string, string | boolean> = {
+      vehicle_id: vehicleId,
+    }
+
+    if (isActive !== undefined) {
+      params.is_active = isActive
+    }
+
+    const { data } = await api.get('/vehicle-pricing/', { params })
+  return data
+}
+
+
   return {
     vehicles, vehicle, total, loading, financials, timeline, documents,
     fetchAll, fetchOne, fetchFinancials, fetchTimeline, fetchDocuments,
     create, update, changeStatus, bulkChangeStatus,
     addPhoto, removePhoto, createDocument, deleteDocument,
+    createRentalPrice, updateRentalPrice, listRentalPrice
   }
 }
