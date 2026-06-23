@@ -227,12 +227,86 @@
             </div>
             <h2 class="text-sm font-semibold text-gray-800 dark:text-white/90">Документы</h2>
           </div>
+
+          <input
+            ref="documentFileInput"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,application/pdf"
+            class="hidden"
+            @change="handleDocumentFileSelected"
+          />
+
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div v-for="doc in documentSlots" :key="doc.key" class="rounded-xl border border-gray-100 p-4 dark:border-gray-800">
-              <p class="mb-3 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ doc.label }}</p>
+            <div
+              v-for="doc in documentSlots"
+              :key="doc.key"
+              class="rounded-xl border border-gray-100 p-4 dark:border-gray-800"
+            >
+              <div class="mb-3 flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    {{ doc.label }}
+                  </p>
+                  <p
+                    :class="[
+                      'mt-1 text-xs',
+                      doc.url
+                        ? 'text-success-600 dark:text-success-400'
+                        : 'text-gray-400 dark:text-gray-500',
+                    ]"
+                  >
+                    {{ doc.url ? 'Загружен' : 'Не загружен' }}
+                  </p>
+                </div>
+
+                <div class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    @click="openDocumentUpload(doc)"
+                    :disabled="documentActionLoading === doc.key"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-600 transition-colors hover:bg-brand-100 disabled:opacity-60 dark:bg-brand-500/10 dark:text-brand-400 dark:hover:bg-brand-500/20"
+                    title="Загрузить"
+                  >
+                    <Loader2
+                      v-if="documentActionLoading === doc.key"
+                      class="h-4 w-4 animate-spin"
+                    />
+                    <Upload v-else class="h-4 w-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    @click="handleDeleteDocument(doc)"
+                    :disabled="!doc.document || documentActionLoading === doc.key"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg bg-error-50 text-error-600 transition-colors hover:bg-error-100 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-error-500/10 dark:text-error-400 dark:hover:bg-error-500/20"
+                    title="Удалить"
+                  >
+                    <Trash2 class="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div
+                v-if="doc.url"
+                class="mb-3 overflow-hidden rounded-lg border border-gray-100 bg-gray-50 dark:border-gray-800 dark:bg-gray-800/50"
+              >
+                <img
+                  v-if="isImageUrl(doc.url)"
+                  :src="resolveDocumentUrl(doc.url)"
+                  :alt="doc.label"
+                  class="h-40 w-full object-cover"
+                />
+
+                <div
+                  v-else
+                  class="flex h-40 items-center justify-center"
+                >
+                  <FileText class="h-8 w-8 text-gray-400" />
+                </div>
+              </div>
               <a
                 v-if="doc.url"
-                :href="doc.url"
+                :href="resolveDocumentUrl(doc.url)"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="flex items-center gap-2 rounded-lg bg-brand-50 px-3 py-2 text-sm font-medium text-brand-600 transition-colors hover:bg-brand-100 dark:bg-brand-500/10 dark:text-brand-400 dark:hover:bg-brand-500/20"
@@ -240,7 +314,11 @@
                 <ExternalLink class="h-4 w-4 shrink-0" />
                 Открыть документ
               </a>
-              <div v-else class="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800/50">
+
+              <div
+                v-else
+                class="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800/50"
+              >
                 <FileText class="h-4 w-4 shrink-0 text-gray-400" />
                 <span class="text-sm text-gray-400 dark:text-gray-500">Не загружен</span>
               </div>
@@ -582,7 +660,7 @@ import { useRoute } from 'vue-router'
 import {
   ArrowLeft, User, CreditCard, FileText, Calendar, Eye,
   AlertTriangle, X, Loader2, CheckCircle2, ExternalLink,
-  RefreshCw, ShieldOff, ShieldCheck, Pencil,
+  RefreshCw, ShieldOff, ShieldCheck, Pencil, Upload, Trash2
 } from 'lucide-vue-next'
 import { useClients } from '@/composables/useClients'
 import { useToast } from '@/composables/useToast'
@@ -595,6 +673,7 @@ import {
   paymentTypeLabel, paymentMethodLabel, paymentStatusLabel, paymentStatusStyle,
 } from '@/utils/status'
 import type { Rental, PaymentTransaction, RentalStatus, DepositStatus, PaymentMethod } from '@/types'
+import api from '@/api/client'
 
 const route = useRoute()
 const clientId = route.params.id as string
@@ -625,17 +704,160 @@ const tabs = computed(() => [
   { key: 'payments' as const, label: 'Платежи', count: payments.value.length },
 ])
 
-const documentSlots = computed(() => [
-  { key: 'id', label: 'Удостоверение личности', url: client.value?.id_document_url },
-  { key: 'front', label: 'Лицензия (лицевая)', url: client.value?.license_front_url },
-  { key: 'back', label: 'Лицензия (обратная)', url: client.value?.license_back_url },
-])
+
+type ClientDocumentType = 'national_id' | 'license_front' | 'license_back'
+
+type ClientDocument = {
+  id : string
+  document_type: ClientDocumentType
+  url?: string | null
+  status?: string
+  name?: string | null
+  description?: string | null
+}
+
+type DocumentSlot = {
+  key: ClientDocumentType
+  label: string
+  url?: string | null
+  document?: ClientDocument
+}
+
+
+const clientDocuments = ref<ClientDocument[]>([])
+const documentFileInput = ref<HTMLInputElement| null>(null)
+const selectedDocumentSlot = ref<DocumentSlot | null>(null)
+const documentActionLoading = ref<ClientDocumentType | null>(null)
+
+const documentSlots = computed<DocumentSlot[]>(() => {
+  const findDoc = (type : ClientDocumentType) =>
+    clientDocuments.value.find(doc => doc.document_type === type)
+
+  return [
+    {
+      key: 'national_id',
+      label: 'Удостоверение личности',
+      document: findDoc('national_id'),
+      url: findDoc('national_id')?.url ?? findDoc('national_id')?.url ?? null,
+    },
+    {
+      key: 'license_front',
+      label: 'Лицензия (лицевая)',
+      document: findDoc('license_front'),
+      url: findDoc('license_front')?.url ?? findDoc('license_front')?.url ?? null,
+    },
+    {
+      key: 'license_back',
+      label: 'Лицензия (обратная)',
+      document: findDoc('license_back'),
+      url: findDoc('license_back')?.url ?? findDoc('license_back')?.url ?? null,
+    }
+  ]
+})
+
+
 
 onMounted(async () => {
   await fetchOne(clientId)
+  await LoadClientDocuments()
   loadRentals()
   loadPayments()
 })
+
+async function LoadClientDocuments() {
+  try {
+    const res = await api.get(`/clients/${clientId}/documents`)
+
+    clientDocuments.value = [
+      res.data.national_id,
+      res.data.license_front,
+      res.data.license_back,
+    ].filter(Boolean)
+  } catch (error) {
+    toast.error('Ошибка при загрузке документов клиента')
+  }
+}
+
+function openDocumentUpload(doc: DocumentSlot) {
+  selectedDocumentSlot.value = doc
+  documentFileInput.value?.click()
+}
+
+
+async function handleDocumentFileSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  const doc = selectedDocumentSlot.value
+
+  if (!file || !doc) return
+
+  documentActionLoading.value = doc.key
+
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('document_type', doc.key)
+
+    if (doc.document?.id) {
+      formData.append('document_id', doc.document.id)
+      formData.append('status', doc.document.status ?? 'pending')
+
+      await api.patch(`/clients/${clientId}/documents`, formData)
+
+      toast.success('Документ обновлён')
+    } else {
+      await api.post(`/clients/${clientId}/documents`, formData)
+
+      toast.success('Документ загружен')
+    }
+
+    await LoadClientDocuments()
+    await fetchOne(clientId)
+  } catch (error) {
+    toast.error('Ошибка при загрузке документа')
+  } finally {
+    documentActionLoading.value = null
+    selectedDocumentSlot.value = null
+    input.value = ''
+  }
+}
+
+async function handleDeleteDocument(doc: DocumentSlot) {
+  if (!doc.document?.id) return
+
+  documentActionLoading.value = doc.key
+
+  try {
+    await api.delete(`/clients/${clientId}/documents`, {
+      data: {
+        client_id: clientId,
+        document_id: doc.document.id,
+      },
+    })
+
+    await LoadClientDocuments()
+    await fetchOne(clientId)
+
+    toast.success('Документ удалён')
+  } catch {
+    toast.error('Ошибка при удалении документа')
+  } finally {
+    documentActionLoading.value = null
+  }
+}
+
+function resolveDocumentUrl(url: string) {
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
+  }
+
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || ''
+  return `${backendUrl}${url}`
+}
+
+function isImageUrl(url: string) {
+  return /\.(jpg|jpeg|png|webp|gif)$/i.test(url.split('?')[0])
+}
 
 async function loadRentals() {
   rentalsLoading.value = true

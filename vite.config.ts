@@ -23,6 +23,10 @@ export default defineConfig({
         target: 'https://subpeltately-superstoical-shavonne.ngrok-free.dev',
         changeOrigin: true,
       },
+      '/uploads': {
+        target: 'https://subpeltately-superstoical-shavonne.ngrok-free.dev',
+        changeOrigin: true,
+      }
     },
   },
 })
