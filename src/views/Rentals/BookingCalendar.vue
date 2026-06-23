@@ -311,13 +311,22 @@ function getWeekdayShort(day: number): string {
 
 function getSlotForDay(vehicle: CalendarVehicle, day: number): CalendarSlot | undefined {
   const { year, month } = parsedMonth.value
-  const date = new Date(year, month, day, 12, 0, 0)
+
+  const date = new Date(year, month, day)
+  date.setHours(0, 0, 0, 0)
+
   return vehicle.slots.find((s) => {
     const start = new Date(s.scheduled_start)
-    const end = new Date(s.scheduled_end)
     start.setHours(0, 0, 0, 0)
-    end.setHours(23, 59, 59, 999)
-    return date >= start && date <= end
+
+    const end = new Date(s.scheduled_end)
+    end.setHours(0, 0, 0, 0)
+
+    if (end <= start){
+      end.setDate(end.getDate() + 1)
+    }
+
+    return date >= start && date < end
   })
 }
 
@@ -335,16 +344,26 @@ function isBarStart(vehicle: CalendarVehicle, day: number): boolean {
 function getVisibleDays(vehicle: CalendarVehicle, day: number): number {
   const slot = getSlotForDay(vehicle, day)
   if (!slot) return 0
+
   const { year, month } = parsedMonth.value
+
   const rentalStart = new Date(slot.scheduled_start)
   rentalStart.setHours(0, 0, 0, 0)
+
   const rentalEnd = new Date(slot.scheduled_end)
   rentalEnd.setHours(23, 59, 59, 999)
+
+  if (rentalEnd <= rentalStart) {
+    rentalEnd.setDate(rentalEnd.getDate() + 1)
+  }
+
   const monthStart = new Date(year, month, 1)
-  const monthEnd = new Date(year, month + 1, 0)
+  const monthEndEnclusive = new Date(year, month + 1, 1)
+
   const barStart = rentalStart < monthStart ? monthStart : rentalStart
-  const barEnd = rentalEnd > monthEnd ? monthEnd : rentalEnd
-  return Math.round((barEnd.getTime() - barStart.getTime()) / 86400000) + 1
+  const barEnd = rentalEnd > monthEndEnclusive ? monthEndEnclusive : rentalEnd
+
+  return Math.round((barEnd.getTime() - barStart.getTime()) / 86400000)
 }
 
 function statusBarClass(status: RentalStatus): string {
@@ -399,7 +418,7 @@ function barLabel(vehicle: CalendarVehicle, day: number): string {
   const slot = getSlotForDay(vehicle, day)
   if (!slot) return ''
   const dur = getVisibleDays(vehicle, day)
-  if (dur <= 1) return ''
+  if (dur < 1) return ''
   const name = slot.client_name.split(' ')[0]
   if (dur >= 4) return `${name} · ${dur}д`
   return name
