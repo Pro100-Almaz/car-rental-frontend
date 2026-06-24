@@ -114,6 +114,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function refreshAccessToken(){
+    try {
+      const {data} = await api.post('/account/refresh/')
+      localStorage.setItem('access_token', data.access_token)
+    }catch(err){
+      localStorage.removeItem('access_token')
+    }
+  }
+
   return {
     user,
     loading,
@@ -128,5 +137,6 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     fetchProfile,
     checkSession,
+    refreshAccessToken,
   }
 })
